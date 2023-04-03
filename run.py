@@ -1,9 +1,10 @@
 import random
 import randomname
 import datetime
+from datetime import timedelta
 import simulators.randomReviews as sim
 import algos.addDay as algos
-from datetime import timedelta
+import utils.plot as plot
 
 class Card:
     def __init__(self):
@@ -14,6 +15,8 @@ class Card:
 
     def __repr__(self):
         return f"{self.name}: \n\tDue: {self.due_at}, \n\tInterval: {self.interval} \n"
+
+logs = []
 
 def create_cards(n):
     cards = []
@@ -35,6 +38,11 @@ def simulate_reviews_for_day(date_time, cards):
             # update card
             card = algos.calculate_card_values(card, review)
             print(card)
+            logs.append({
+                'card': card,
+                'review': review,
+                'date_time': date_time
+            })
     
 
 def main():
@@ -44,6 +52,8 @@ def main():
     for i in range(20):
         date_time = datetime.datetime.now() + timedelta(days=i)
         simulate_reviews_for_day(date_time, cards)
+
+    plot.test_plot(logs)
 
 if __name__ == "__main__":
     main()
