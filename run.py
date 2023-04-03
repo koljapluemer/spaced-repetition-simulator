@@ -53,7 +53,7 @@ def main():
         date_time = datetime.datetime.now() + timedelta(days=i)
         simulate_reviews_for_day(date_time, cards)
 
-    plot.test_plot(logs)
+    plot.my_plot()
 
 if __name__ == "__main__":
     main()
