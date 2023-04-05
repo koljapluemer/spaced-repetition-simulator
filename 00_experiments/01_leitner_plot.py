@@ -2,6 +2,16 @@ import random
 import randomname
 from datetime import datetime, timedelta
 
+from matplotlib import cbook
+from matplotlib import cm
+from matplotlib.colors import LightSource
+import matplotlib.pyplot as plt
+import numpy as np
+
+from mpl_toolkits.mplot3d.axes3d import Axes3D
+from matplotlib.collections import PolyCollection
+import math
+
 boxes = [
     "current",
     "0259",
@@ -16,6 +26,10 @@ boxes = [
     "9148",
     "retired"
 ]
+
+
+# fill with 12 empty objects and give random color
+datasets = [{'x': [], 'y':[], 'z':[], 'color': [random.random(), random.random(), random.random()]} for i in range(12)]
 
 def calculate_card_values(card, review, session_nr):
     """Calculate the new values for the card based on the review."""
@@ -61,7 +75,16 @@ def create_cards(n):
         cards.append(Card())
     return cards
 
-def simulate_reviews_for_day(date_time, cards):
+def simulate_reviews_for_day(date_time, cards, day_count):
+
+    # for every box, track how many cards are in that box
+    for box in boxes:
+        counter = len([card for card in cards if card.box == box])
+        index_of_box = boxes.index(box)
+        datasets[index_of_box]['x'].append(day_count)
+        datasets[index_of_box]['z'].append(counter)
+        datasets[index_of_box]['y'].append(index_of_box)
+
     print('------------------------------')
     print(f"Simulating reviews for {date_time}...")
     print('------------------------------')
@@ -91,19 +114,59 @@ def simulate_reviews_for_day(date_time, cards):
                 'box': card.box
             })
 
-    # for every box, track how many cards are in that box
-    for box in boxes:
-        counter = len([card for card in cards if card.box == box])
-        print(f"{box}: {counter}")
+
+        
     
 
+def my_plot():
+    x = [1, 2, 3, 4, 5]
+    y = [1, 4, 9, 16, 25]
+    z = [1, 8, 27, 64, 125]
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(x, y, z)
+    plt.show()
+
+
+def random_line_chart():
+
+    fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+
+    data = [{"x":[1+i,2,3], "y":[1+i,4,9], "z":[0,i,i*2], "color": "red"} for i in range(6)]
+
+    for dataset in data:
+        ax.plot(dataset["x"], dataset["y"], dataset["z"], color=dataset["color"])
+
+    plt.show()
+
+def plot_leitner_due_cards_per_box():
+    fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
+
+    print(f"there are {len(datasets)} datasets ")
+
+    for dataset in datasets:
+        ax.plot(dataset["x"], dataset["y"], dataset["z"], color=dataset["color"])
+        ax.set(
+            xlabel='Day',
+            ylabel='Box',
+            zlabel='Cards'
+        )
+    plt.show()
+
+
 def main():
-    cards = create_cards(100)
+
+
+    cards = create_cards(1000)
     # get a list of the next 20 days
     # for each day, simulate reviews
-    for i in range(365):
+    day_count = 0
+    for i in range(20):
+        day_count += 1
         date_time = datetime.now() + timedelta(days=i)
-        simulate_reviews_for_day(date_time, cards)
+        simulate_reviews_for_day(date_time, cards, day_count)
+
+    plot_leitner_due_cards_per_box()
 
 
 if __name__ == "__main__":
