@@ -28,18 +28,20 @@ boxes = [
 ]
 
 
+def get_random_dark_color():
+    r = random.random()
+    g = random.random()
+    b = random.random()
+    return [r/1.2, g/1.2, b/1.2]
+
 # fill with 12 empty objects and give random color
-datasets = [{'x': [], 'y':[], 'z':[], 'color': [random.random(), random.random(), random.random()]} for i in range(12)]
+datasets = [{'x': [], 'y':[], 'z':[], 'color': get_random_dark_color()} for i in range(12)]
 
 def calculate_card_values(card, review, session_nr):
     """Calculate the new values for the card based on the review."""
     if review == 0:
         card.set_box("current")
     if review == 1:
-        # if the cards current box ends with the session_nr, move into retired 
-        if boxes.index(card.box) == session_nr:
-            card.set_box("retired")
-
         # if card is in "current", move
         if card.box == "current":
             # move to box that starts with session_nr
@@ -47,6 +49,11 @@ def calculate_card_values(card, review, session_nr):
                 if box.startswith(str(session_nr)):
                     card.set_box(box)
                     break
+        # if the cards current box ends with the session_nr, move into retired 
+        elif card.box.endswith(str(session_nr)):
+            card.set_box("retired")
+
+    
     return card
 
 
@@ -76,21 +83,13 @@ def create_cards(n):
     return cards
 
 def simulate_reviews_for_day(date_time, cards, day_count):
-
-    # for every box, track how many cards are in that box
-    for box in boxes:
-        counter = len([card for card in cards if card.box == box])
-        index_of_box = boxes.index(box)
-        datasets[index_of_box]['x'].append(day_count)
-        datasets[index_of_box]['z'].append(counter)
-        datasets[index_of_box]['y'].append(index_of_box)
-
     print('------------------------------')
     print(f"Simulating reviews for {date_time}...")
     print('------------------------------')
   
     session_nr = calculate_session_nr(date_time)
     print(f"Session nr: {session_nr}")
+
     list_of_boxes_to_review = ["current"]
     # add all boxes that contain the session_nr
     for box in boxes:
@@ -99,13 +98,24 @@ def simulate_reviews_for_day(date_time, cards, day_count):
     # count how many cards are in the boxes to review with list comprehension
     counter = len([card for card in cards if card.box in list_of_boxes_to_review])
     print(f"Cards to review: {counter}\n -------- ")
+
+    # for every box, track how many cards are in that box
+    for box in boxes:
+        counter = len([card for card in cards if card.box == box])
+        index_of_box = boxes.index(box)
+        datasets[index_of_box]['x'].append(day_count)
+        datasets[index_of_box]['z'].append(counter)
+        datasets[index_of_box]['y'].append(index_of_box)
+        print(f"{box}: {counter}")
+
+    print('------------------')
+
     for card in cards:
         if card.box in list_of_boxes_to_review:
             # simulate a review (randomly pick between 0 and 1)
             review = random.randint(0, 1)
             # update card
             card = calculate_card_values(card, review, session_nr)
-            # print(card)
             logs.append({
                 'card': card,
                 'review': review,
@@ -114,9 +124,6 @@ def simulate_reviews_for_day(date_time, cards, day_count):
                 'box': card.box
             })
 
-
-        
-    
 
 def my_plot():
     x = [1, 2, 3, 4, 5]
@@ -155,13 +162,11 @@ def plot_leitner_due_cards_per_box():
 
 
 def main():
-
-
     cards = create_cards(1000)
     # get a list of the next 20 days
     # for each day, simulate reviews
     day_count = 0
-    for i in range(20):
+    for i in range(365):
         day_count += 1
         date_time = datetime.now() + timedelta(days=i)
         simulate_reviews_for_day(date_time, cards, day_count)
