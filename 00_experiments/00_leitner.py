@@ -45,15 +45,13 @@ def calculate_session_nr(date_time):
 class Card:
     def __init__(self):
         self.name = randomname.get_name()
-        # set due to now
-        self.interval = 1
         self.box = "current"
 
     def set_box(self, box):
         self.box = box
 
     def __repr__(self):
-        return f"{self.name}: \n\tInterval: {self.interval} \n"
+        return f"{self.name}: \n in Box: {self.box} \n"
 
 logs = []
 
@@ -69,19 +67,22 @@ def simulate_reviews_for_day(date_time, cards):
     print('------------------------------')
   
     session_nr = calculate_session_nr(date_time)
+    print(f"Session nr: {session_nr}")
     list_of_boxes_to_review = ["current"]
     # add all boxes that contain the session_nr
     for box in boxes:
         if str(session_nr) in box:
             list_of_boxes_to_review.append(box)
-
+    # count how many cards are in the boxes to review with list comprehension
+    counter = len([card for card in cards if card.box in list_of_boxes_to_review])
+    print(f"Cards to review: {counter}\n -------- ")
     for card in cards:
         if card.box in list_of_boxes_to_review:
             # simulate a review (randomly pick between 0 and 1)
             review = random.randint(0, 1)
             # update card
             card = calculate_card_values(card, review, session_nr)
-            print(card)
+            # print(card)
             logs.append({
                 'card': card,
                 'review': review,
@@ -89,10 +90,15 @@ def simulate_reviews_for_day(date_time, cards):
                 'session_nr': session_nr,
                 'box': card.box
             })
+
+    # for every box, track how many cards are in that box
+    for box in boxes:
+        counter = len([card for card in cards if card.box == box])
+        print(f"{box}: {counter}")
     
 
 def main():
-    cards = create_cards(1)
+    cards = create_cards(100)
     # get a list of the next 20 days
     # for each day, simulate reviews
     for i in range(20):
